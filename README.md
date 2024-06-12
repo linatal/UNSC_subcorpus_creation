@@ -1,4 +1,4 @@
-# Subcorpus Creation for UNSC Corpus 
+# Subcorpus Creation for UNSC Corpus (work in progress)
 The project helps to select debates in the UNSC Debates Corpus (Schönfeld et al. 2019) based on different factors for further analysis.
 
 

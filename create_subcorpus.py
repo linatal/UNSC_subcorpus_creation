@@ -1,13 +1,10 @@
-# conda activate UNSC_analysis
 import os
 import argparse
 from pathlib import Path
 import configparser
-
 import pandas as pd
-
 import numpy as np
-ROOT_DIR = os.getcwd()
+
 
 
 def get_topic_debates(df_meta, topics_list):
@@ -116,7 +113,9 @@ if __name__ == '__main__':
 
     # manage paths in config file
     config = configparser.ConfigParser()
-    config.read("config.ini")
+    #config.read("config.ini") #CHANGE
+    config.read("config_temp.ini")
+
     meta_path = config['DATA_INPUT']['meta_table']
     df_meta = pd.read_csv(meta_path, sep="\t")
 

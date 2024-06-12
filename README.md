@@ -1,18 +1,20 @@
-# Preparing Subcorpus Selection for UNSCon (based on Debates)
+# Subcorpus Creation for UNSC Corpus 
+The project helps to select debates in the UNSC Debates Corpus (Schönfeld et al. 2019) based on different factors for further analysis.
 
-### Prerequesites
+
+## Prerequesites
 Download requirements via pip: 
 ```pip install requirements.txt```
 
-### Prepare Corpus
+## Prepare Corpus
 1. Download the original "UN Security Council Debates" corpus from https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KGVSYH
-(Schoenfeld et. al 2019) containing all debates. 
+(Schoenfeld et al. 2019) containing all debates. 
 2. Unzip directory ``dataverse_files.zip`` and extract subdirectiory ``speeches.tar``. 
-3. Copy ``dataverse_files`` into ``/data`` project folder . The pr
+3. Copy ``dataverse_files`` into ``/data`` project folder . The projectstructure should look like the following:
 ```
 - /UNSC_subcorpus_creation
 -- /data
----- /dataverse_files
+---- /dataverse_files <--original UNSC corpus
 ------ speaker.tsv
 ------ meta.tsv
 ------ /speaker
@@ -22,7 +24,7 @@ Download requirements via pip:
 -- config.ini
 ```
 
-### Flags 
+## Setting Flags for Filtering   
 ``python topic.py  [-h] [--topic] [-y] [-o] [-c]``
 
 #### Output
@@ -40,8 +42,8 @@ and speeches and metadata based on filters (see below), please use the ``--creat
 **--year**: defines start and end year according to which the debates should be filtered. Accepts two integers as input in format yyyy.  
 ``python topic.py --year [-y] 2014 2018``
 
-**--outcome**: Some debates have either a Press Statement (```"PRST"```), Resolution (```"RES"```) or no outcome (```"None"```). 
-Flag defines one or more outcomes according to which the debates should be filtered.  
+**--outcome**: Some debates either have a Press Statement (```"PRST"```), Resolution (```"RES"```) or no outcome (```"None"```). 
+The flag defines one or more outcomes according to which the debates should be filtered.  
 ``python topic.py --outcome [-o] "PRST"``  
 ``python topic.py --outcome [-o] "PRST" "None"``
 

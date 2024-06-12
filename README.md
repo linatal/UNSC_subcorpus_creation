@@ -1,5 +1,5 @@
 # Subcorpus Creation for UNSC Corpus (work in progress)
-The project helps to select debates in the UNSC Debates Corpus (Schönfeld et al. 2019) based on different factors for further analysis.
+The project helps to select debates in the UNSC Debates Corpus (covering debates 1995-2020 (v5), see Schönfeld et al. 2019) based on different factors for further analysis.
 
 
 ## Prerequesites
@@ -25,30 +25,34 @@ Download requirements via pip:
 ```
 
 ## Setting Flags for Filtering   
-``python topic.py  [-h] [--topic] [-y] [-o] [-c]``
+``$python topic.py  [-h] [-t] [-y] [-o] [-c]``
 
 #### Output
-The default output is a list of debates on the console. To create a new folder containing a subcorpus with debates 
+The default output is a list of debates that meet the requirements on the console. To create a new folder containing a subcorpus with debates 
 and speeches and metadata based on filters (see below), please use the ``--create`` flag.
 
-**--create**: If set, the script will create a subcorpus in ``/outcome``.
-``python topic.py --topic [-t] True``
+**--create**:  
+If set, the script will create a subcorpus in ``/outcome``.  
+``$python topic.py --topic [-t] True``
 
 #### Filter
-**--topic**: defines one or more topics that the subcorpus should cover. The input is one or more strings.
-``python topic.py --topic [-t] "Ukraine"``  
-``python topic.py --topic [-t] "Ukraine" "Iraq"``
+**--topic**:  
+defines one or more topics that the subcorpus should cover. The input is one or more strings.  
+``$python topic.py --topic [-t] "Ukraine"``  
+``$python topic.py --topic [-t] "Ukraine" "Iraq"``
 
-**--year**: defines start and end year according to which the debates should be filtered. Accepts two integers as input in format yyyy.  
-``python topic.py --year [-y] 2014 2018``
+**--year**:  
+defines start and end year according to which the debates should be filtered. Accepts two integers as input in format yyyy.  
+``$python topic.py --year [-y] 2014 2018``
 
-**--outcome**: Some debates either have a Press Statement (```"PRST"```), Resolution (```"RES"```) or no outcome (```"None"```). 
+**--outcome**:  
+Some debates either have a Press Statement (```"PRST"```), Resolution (```"RES"```) or no outcome (```"None"```). 
 The flag defines one or more outcomes according to which the debates should be filtered.  
-``python topic.py --outcome [-o] "PRST"``  
-``python topic.py --outcome [-o] "PRST" "None"``
+``$python topic.py --outcome [-o] "PRST"``  
+``$python topic.py --outcome [-o] "PRST" "None"``
 
 It is possible to define several filters. The next command is creating a subcorpus and metadata with debates on Iraq from 2024.  
-``python topic.py --topic "Iraq" --year 2024 2024 --create``
+``$python topic.py --topic "Iraq" --year 2024 2024 --create``
 
 
 TODO: 

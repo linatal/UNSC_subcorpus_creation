@@ -7,17 +7,22 @@ import numpy as np
 import shutil
 
 
-def get_topic_debates(topics_list, df_meta):
+def get_topic_debates(topics_list, exact_match, df_meta):
     # get only rows with one of topics
-    df_metasub = df_meta[df_meta['topic'].str.contains('|'.join(topics_list))]
-    # count occurence 
-    df_count_debates = df_metasub["year"].value_counts()
-    df_count_debates = df_count_debates.sort_index()
-    # all basenames containing topic
-    return df_count_debates
+    topics_list = [x.lower() for x in topics_list] #lowercase input
+    input_topics = '|'.join(topics_list)
+    df_meta['topic_lc'] = df_meta['topic'].map(lambda x: x.lower() if isinstance(x,str) else x) # lowercase df column
+    if exact_match:
+        df_metasub = df_meta[df_meta['topic_lc'].str.contains("^(?:"+input_topics+")$", regex=True)]
+    elif not exact_match:
+        df_metasub = df_meta[df_meta['topic_lc'].str.contains(input_topics)]
+    topics = set(df_metasub['topic'].tolist())
+    print(f"The following topics were found: {topics}")
+
+    return df_metasub.drop(columns=['topic_lc'])
 
 
-def filter_debates_outcome(outcome_list, df_meta):
+def get_debates_outcome(outcome_list, df_meta):
     #standardize outcome column
     df_meta = df_meta.replace({np.nan: "None"})
     # standardize labels for outcome column
@@ -29,7 +34,7 @@ def filter_debates_outcome(outcome_list, df_meta):
     return df_meta_outcome
 
 
-def filter_debates_year(year_list, df):
+def get_debates_year(year_list, df):
     x = range(year_list[0], year_list[1]+1)
     listi = [xi for xi in x]
     df_year = df[df['year'].isin(listi)]
@@ -62,11 +67,11 @@ def create_corpus(df, df_speech_meta, dir_path, output_dir_path):
 
 
 # ---check flags
-def check_topic_flag(flag_topic, df):
+def check_topic_flag(flag_topic, flag_exact, df):
     if flag_topic is not None:
         topics_list = flag_topic
         print(f"Debates are filtered by topic(s): {topics_list}")
-        df_topic = get_topic_debates(topics_list, df)
+        df_topic = get_topic_debates(topics_list, flag_exact,  df)
         return df_topic
     else:
         print('No topic selected.')
@@ -78,7 +83,7 @@ def check_outcome_flag(flag_outcome, df):
     outcome_list = flag_outcome
     if outcome_list is not None:
         print(f"Debates are filtered by outcome type(s): {outcome_list}")
-        df_outcome = filter_debates_outcome(outcome_list, df)
+        df_outcome = get_debates_outcome(outcome_list, df)
     else:
         print('No outcome selected.')
         return df
@@ -87,10 +92,9 @@ def check_outcome_flag(flag_outcome, df):
 def check_year_flag(flag_year, df):
     # filters debates based on year (input: flag_year[list with two int])
     year_list = flag_year
-    print(year_list)
     if year_list is not None:
         print(f"Debates are selected by years between: {year_list}")
-        df_year = filter_debates_year(year_list, df)
+        df_year = get_debates_year(year_list, df)
         return df_year
     else:
         print('No years selected.')
@@ -99,10 +103,13 @@ def check_year_flag(flag_year, df):
 
 if __name__ == '__main__':
     # manage flags
-    # TODO keyerror when using more than one flag
-    parser = argparse.ArgumentParser(prog="create_subcorpus.py", description="Creates subcorpus based on agenda topic and "
-                                    "optionally based on start and end year. For subcorpus creation use flag -c. ")
+
+    parser = argparse.ArgumentParser(prog="create_subcorpus.py", description="Creates subcorpus based on agenda topic, "
+                                    "outcome, start and end year. For subcorpus creation use flag --create. ")
     parser.add_argument("-t", "--topic", nargs="+")  # creates list of topic entries
+    parser.add_argument("--exact_match", action="store_true") # boolean value, default False
+    #parser.add_argument("--subtopics", action="store_true") # boolean value, default False
+
     parser.add_argument("-y", "--year", nargs=2, type=int) # creates list of start and end year '-y 2024 2025'
     parser.add_argument("-o", "--outcome", nargs="+") # creates list of outcomes: 'PRST', 'RES', 'None'
     parser.add_argument("-c", "--create", action="store_true")     # boolean value, default True
@@ -118,7 +125,8 @@ if __name__ == '__main__':
     df_meta = pd.read_csv(meta_path, sep="\t")
     df_speech = pd.read_csv(speaker_path, sep="\t")
 
-    df_topic_debates = check_topic_flag(args.topic, df_meta)
+    exmat = args.exact_match
+    df_topic_debates = check_topic_flag(args.topic, exmat, df_meta)
     df_outcome_debates = check_outcome_flag(args.outcome, df_topic_debates)
     df_year_debates = check_year_flag(args.year, df_outcome_debates)
 
@@ -133,6 +141,10 @@ if __name__ == '__main__':
         # create speeches-metadata table
         df_meta_filtered.to_csv(output_dir / "meta_subcorpus.csv", index=False)
         df_speaker_filtered.to_csv(output_dir / "speeches_subcorpus.csv", index=False)
+    else:
+        output_list = df_year_debates['basename'].tolist()
+        print(f"{len(output_list)} debates meet the criteria:")
+        print(output_list)
 
 
 

@@ -1,4 +1,4 @@
-# Subcorpus Creation for UNSC Corpus (work in progress)
+# Subcorpus Creation for UNSC Corpus
 The project helps to select debates in the UNSC Debates Corpus (covering debates 1995-2020 (v5), see Schönfeld et al. 2019) based on different factors for further analysis.
 
 
@@ -42,33 +42,31 @@ The corpus includes several subtopics, which can also be included in the search 
 
 **--topic + str**  
 defines one or more topics that the subcorpus should cover. The input is one or more strings.  
-``$python topic.py --topic [-t] "Ukraine"``  
-``$python topic.py --topic [-t] "Ukraine" "Iraq"``  
-**--exact_match** 
+``$python topic.py --topic "Ukraine"``  
+``$python topic.py --topic "Ukraine" "Iraq"``  
+**--exact_match**   
 If set, substring search is changed to exact match search.
-``$python topic.py --topic [-t] "Iraq-Kuweit" --exact_match``    
-(TODO) **--subtopics**
+``$python topic.py --topic "Iraq-Kuwait" --exact_match``    
+(TODO) **--subtopics**  
 If set, the script searches in topics and subtopics for the topic-query.  
-``$python topic.py --topic [-t] "Iraq-Kuweit" --subtopics`` 
+``$python topic.py --topic "Iraq-Kuweit" --subtopics`` 
 
 ### Other Filters
 **--year + int int**  
 defines start and end year according to which the debates should be filtered. Accepts two integers as input in format yyyy.  
-``$python topic.py --year [-y] 2014 2018``
+``$python topic.py --year 2014 2018``
 
 **--outcome + str**:  
 Some debates either have a Press Statement (```"PRST"```), Resolution (```"RES"```) or no outcome (```"None"```). 
 The flag defines one or more outcomes according to which the debates should be filtered.  
-``$python topic.py --outcome [-o] "PRST"``  
-``$python topic.py --outcome [-o] "PRST" "None"``
+``$python topic.py --outcome "PRST"``  
+``$python topic.py --outcome "PRST" "None"``
 
 It is possible to define several filters. The next command is creating a subcorpus and metadata with debates on Iraq from 2024.  
 ``$python topic.py --topic "Iraq" --year 2024 2024 --create``
 
 
-TODO:
-- output: len debates, list of debates (print), len speeches (from meta)
-
+--------------
 
 potential TODO on subcorpus:
 - voting behaviour:

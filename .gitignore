@@ -1,6 +1,4 @@
 # Project
-data/dataverse_files
-output/*
 redirect_basenamesfiles2folder.py
 config_temp.ini
 

@@ -1,4 +1,6 @@
 # Project
+data/*
+output/
 redirect_basenamesfiles2folder.py
 config_temp.ini
 

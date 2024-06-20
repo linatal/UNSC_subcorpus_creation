@@ -8,16 +8,26 @@ import shutil
 
 
 def get_topic_debates(topics_list, exact_match, df_meta):
-    # get only rows with one of topics
-    topics_list = [x.lower() for x in topics_list] #lowercase input
-    input_topics = '|'.join(topics_list)
-    df_meta['topic_lc'] = df_meta['topic'].map(lambda x: x.lower() if isinstance(x,str) else x) # lowercase df column
+    topics_list_lw = [x.lower() for x in topics_list] #lowercase input
+    df_meta['topic_lc'] = df_meta['topic'].map(lambda x: x.lower() if isinstance(x,str) else x) # create lw topics column
+    # check len topics input
+    if len(topics_list_lw) == 1:
+        new_str_topic = topics_list_lw[0]
+        print("topic regex:", new_str_topic)
+    elif len(topics_list_lw) > 1:
+        new_str_topic = "|".join(topics_list_lw) # transpose list for regex
+        print("topic regex:", new_str_topic)
+    else:
+        print("something went wrong, check topics input list")
+    # check exact match
     if exact_match:
-        df_metasub = df_meta[df_meta['topic_lc'].str.contains("^(?:"+input_topics+")$", regex=True)]
+        df_metasub = df_meta[df_meta['topic_lc'].str.fullmatch(new_str_topic)] # if row is eq input_topic string
     elif not exact_match:
-        df_metasub = df_meta[df_meta['topic_lc'].str.contains(input_topics)]
+        df_metasub = df_meta[df_meta['topic_lc'].str.contains(new_str_topic)] # if row is eq or contains input_topic string
+
     topics = set(df_metasub['topic'].tolist())
     print(f"The following topics were found: {topics}")
+    print(f"Extracted {df_metasub.shape[0]} debates based on chosen topics.")
 
     return df_metasub.drop(columns=['topic_lc'])
 
@@ -31,6 +41,7 @@ def get_debates_outcome(outcome_list, df_meta):
     df_meta['outcome_label'] = list(map(lambda x: next((y for y in df_values['values'] if y in x), 'None'), df_meta['outcome']))
     # filter dataframe based on outcome
     df_meta_outcome = df_meta[df_meta['outcome_label'].isin(outcome_list)]
+    print(f"Extracted {df_meta_outcome.shape[0]} debates based on chosen topics and outcomes.")
     return df_meta_outcome
 
 
@@ -38,6 +49,7 @@ def get_debates_year(year_list, df):
     x = range(year_list[0], year_list[1]+1)
     listi = [xi for xi in x]
     df_year = df[df['year'].isin(listi)]
+    print(f"Extracted {df_year.shape[0]} debates based on chosen topics, outcomes and years.")
     return df_year
 
 
@@ -63,7 +75,7 @@ def create_corpus(df, df_speech_meta, dir_path, output_dir_path):
             print(f"Warning {speech_path} does not exist.")
         else:
             shutil.copy(speech_path, copy_speech_path)
-    return df, df_speech
+    return df, df_spchs_filtered
 
 
 # ---check flags
@@ -131,16 +143,23 @@ if __name__ == '__main__':
     df_year_debates = check_year_flag(args.year, df_outcome_debates)
 
     if args.create is True:
-        output_dir = Path(config['DATA_OUTPUT']['output_dir'])
+        print(f"Will create subcorpus with {len(df_year_debates)} debates.")
+        a = input("Continue? [y(es)/n(o)] ")
+        if a.lower() == "yes" or a.lower() == "y":
+            output_dir = Path(config['DATA_OUTPUT']['output_dir'])
 
-        orig_speeches = Path(config['DATA_INPUT']['corpus_raw_dir'])
+            orig_speeches = Path(config['DATA_INPUT']['corpus_raw_dir'])
 
-        print(f"Create subcorpus in {output_dir}")
-        df_meta_filtered, df_speaker_filtered = create_corpus(df_year_debates, df_speech, orig_speeches, output_dir)
+            print(f"Create subcorpus in directory: ./{output_dir}")
+            df_meta_filtered, df_speaker_filtered = create_corpus(df_year_debates, df_speech, orig_speeches, output_dir)
 
-        # create speeches-metadata table
-        df_meta_filtered.to_csv(output_dir / "meta_subcorpus.csv", index=False)
-        df_speaker_filtered.to_csv(output_dir / "speeches_subcorpus.csv", index=False)
+            # create speeches-metadata table
+            df_meta_filtered.to_csv(output_dir / "meta_subcorpus.csv", index=True)
+            df_speaker_filtered.to_csv(output_dir / "speeches_subcorpus.csv", index=True)
+        elif a.lower() == "no" or a.lower() == "n":
+            print("User input is 'NO'. Corpus creation aborted.")
+        else:
+            print("User input is invalid. Corpus creation aborted.")
     else:
         output_list = df_year_debates['basename'].tolist()
         print(f"{len(output_list)} debates meet the criteria:")

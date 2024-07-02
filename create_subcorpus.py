@@ -52,11 +52,26 @@ def get_debates_year(year_list, df):
     print(f"Extracted {df_year.shape[0]} debates based on chosen topics, outcomes and years.")
     return df_year
 
+def get_debates_lexicoder_min(flag_min, df):
+    df = df[df.lexicoder_score >= flag_min]
+    df_sorted = df.sort_values("lexicoder_score")
+    return df_sorted
 
-def create_corpus(df, df_speech_meta, dir_path, output_dir_path):
+def get_debates_lexicoder_max(flag_max, df):
+    df = df
+    df = df[df.lexicoder_score <= flag_max]
+    df_sorted = df.sort_values("lexicoder_score")
+    return df_sorted
+
+def get_debates_lexicoder_minmax(flag_min, flag_max, df):
+    df = df[df.lexicoder_score <= flag_max and df.lexicoder_score >= flag_min]
+    df_sorted = df.sort_values("lexicoder_score")
+    return df_sorted
+
+def create_corpus(df, df_speech_meta, dir_path, output_dir):
     # copies filtered speech-txt-files from orig corpus into subcorpus
     # get basenames(=debates) from subcorpus meta table, filter speech-meta table based on basenames
-    output_dir_path = output_dir / "speeches_subcorpus"
+    output_dir_path = output_dir / "speeches_subcorpus" # TODO: check
     basename_list = df['basename'].tolist()
     df_spchs_filtered = df_speech_meta[df_speech_meta['basename'].isin(basename_list)]
 
@@ -112,19 +127,49 @@ def check_year_flag(flag_year, df):
         print('No years selected.')
         return df
 
+def check_senti_flag(flag_sent, flag_min, flag_max, df):
+    #TODO
+    if flag_min is not None or flag_max is not None:
+        print(f"Info: The min value of lexicoder score is {df['lexicoder_score'].min()}, the max value is {df['lexicoder_score'].max()}. The average score is {df['lexicoder_score'].mean()}")
+    if flag_min is None and flag_max is None:
+        print("No sentiment score selected.")
+        return df
+    elif flag_sent is True and flag_min is not None and flag_max is None:
+        print(f"Debates are selected by sentiment score of min: {flag_min}")
+        df_senti = get_debates_lexicoder_min(flag_min, df)
+        return df_senti
+    elif flag_sent is True and flag_max is not None and flag_min is None:
+        print(f"Debates are selected by sentiment score of max: {flag_max}")
+        df_senti = get_debates_lexicoder_max(flag_max, df)
+        return df_senti
+    elif flag_sent is True and flag_max is not None and flag_min is not None:
+        if flag_max <= flag_min:
+            print(f"Error sentiment: Threshold max is equal to or smaller than threshold min. PLease choose another threshold.")
+            return df
+        elif flag_max > flag_min:
+            print(f"Debates are selected by sentiment score of min: {flag_min} and max: {flag_max}")
+            df_senti = get_debates_lexicoder_minmax(flag_min, flag_max, df)
+            return df_senti
+
+
+
+
 
 if __name__ == '__main__':
     # manage flags
-
     parser = argparse.ArgumentParser(prog="create_subcorpus.py", description="Creates subcorpus based on agenda topic, "
                                     "outcome, start and end year. For subcorpus creation use flag --create. ")
     parser.add_argument("-t", "--topic", nargs="+")  # creates list of topic entries
-    parser.add_argument("--exact_match", action="store_true") # boolean value, default False
-    #parser.add_argument("--subtopics", action="store_true") # boolean value, default False
+    parser.add_argument("--exact_match", action="store_true")  # boolean value, default True
+    #parser.add_argument("--subtopics", action="store_true")
 
-    parser.add_argument("-y", "--year", nargs=2, type=int) # creates list of start and end year '-y 2024 2025'
-    parser.add_argument("-o", "--outcome", nargs="+") # creates list of outcomes: 'PRST', 'RES', 'None'
-    parser.add_argument("-c", "--create", action="store_true")     # boolean value, default True
+    parser.add_argument("-y", "--year", nargs=2, type=int)  # creates list of start and end year '-y 2024 2025'
+    parser.add_argument("-o", "--outcome", nargs="+")  # creates list of outcomes: 'PRST', 'RES', 'None'
+    parser.add_argument("-c", "--create", action="store_true")  # boolean value, default True
+
+    parser.add_argument("--lexicoder_score", action="store_true")
+    parser.add_argument("--min", type=float)
+    parser.add_argument("--max", type=float)
     args = parser.parse_args()
 
     # manage paths in config file
@@ -141,9 +186,10 @@ if __name__ == '__main__':
     df_topic_debates = check_topic_flag(args.topic, exmat, df_meta)
     df_outcome_debates = check_outcome_flag(args.outcome, df_topic_debates)
     df_year_debates = check_year_flag(args.year, df_outcome_debates)
+    df_sentiment_debates = check_senti_flag(args.lexicoder_score, args.min, args.max, df_year_debates)
 
     if args.create is True:
-        print(f"Will create subcorpus with {len(df_year_debates)} debates.")
+        print(f"Will create subcorpus with {len(df_sentiment_debates)} debates.")
         a = input("Continue? [y(es)/n(o)] ")
         if a.lower() == "yes" or a.lower() == "y":
             output_dir = Path(config['DATA_OUTPUT']['output_dir'])
@@ -151,17 +197,17 @@ if __name__ == '__main__':
             orig_speeches = Path(config['DATA_INPUT']['corpus_raw_dir'])
 
             print(f"Create subcorpus in directory: ./{output_dir}")
-            df_meta_filtered, df_speaker_filtered = create_corpus(df_year_debates, df_speech, orig_speeches, output_dir)
+            df_meta_filtered, df_speaker_filtered = create_corpus(df_sentiment_debates, df_speech, orig_speeches, output_dir)
 
             # create speeches-metadata table
-            df_meta_filtered.to_csv(output_dir / "meta_subcorpus.csv", index=True)
-            df_speaker_filtered.to_csv(output_dir / "speeches_subcorpus.csv", index=True)
+            df_meta_filtered.to_csv(output_dir / "meta_subcorpus.tsv", sep="\t", index=True)
+            df_speaker_filtered.to_csv(output_dir / "speeches_subcorpus.tsv", sep="\t", index=True)
         elif a.lower() == "no" or a.lower() == "n":
             print("User input is 'NO'. Corpus creation aborted.")
         else:
             print("User input is invalid. Corpus creation aborted.")
     else:
-        output_list = df_year_debates['basename'].tolist()
+        output_list = df_sentiment_debates['basename'].tolist()
         print(f"{len(output_list)} debates meet the criteria:")
         print(output_list)
 

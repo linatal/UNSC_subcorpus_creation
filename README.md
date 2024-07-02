@@ -14,18 +14,23 @@ Download requirements via pip:
 ```
 - /UNSC_subcorpus_creation
 -- /data
----- /dataverse_files <--original UNSC corpus
+---- /dataverse_files <--original UNSC corpus dirname
 ------ speaker.tsv
 ------ meta.tsv
------- /speaker
------- ...
+------ /speeches
+------------UNSC_2013_SPV.6990_spch001.txt
+------------UNSC_2013_SPV.6990_spch002.txt
+------------...
 -- /output
 -- create_subcorpus.py
 -- config.ini
 ```
 
-## Setting Flags for Filtering   
-``$python create_subcorpus.py  [-h] [-t] [-y] [-o] [-c]``
+## Setting Flags
+``$python create_subcorpus.py  [-h] [-t] [-y] [-o] [-c] [--lexicoder_score --min --max]``
+
+It is possible to define several filters. The next command is creating a subcorpus and metadata with debates on Iraq from 2024.  
+``$python create_subcorpus.py --topic "Iraq" --year 2024 2024 --create``
 
 ### Output
 The default output is a list of debates that meet the requirements on the console. To create a new folder containing a subcorpus with debates 
@@ -49,7 +54,7 @@ If set, substring search is changed to exact match search.
 ``$python create_subcorpus.py --topic "Iraq-Kuwait" --exact_match``    
 (TODO) **--subtopics**  
 If set, the script searches in topics and subtopics for the topic-query.  
-``$python create_subcorpus.py --topic "Iraq-Kuweit" --subtopics`` 
+``$python create_subcorpus.py --topic "Iraq-Kuweit" --subtopics``
 
 ### Other Filters
 **--year + int int**  
@@ -62,8 +67,17 @@ The flag defines one or more outcomes according to which the debates should be f
 ``$python create_subcorpus.py --outcome "PRST"``  
 ``$python create_subcorpus.py --outcome "PRST" "None"``
 
-It is possible to define several filters. The next command is creating a subcorpus and metadata with debates on Iraq from 2024.  
-``$python create_subcorpus.py --topic "Iraq" --year 2024 2024 --create``
+
+
+
+### Filter based on Sentiment Scores (TODO)
+To filter debates and speeches based on sentiment, first preprocess the corpus with lexicoder sentiment dictionary: https://github.com/linatal/UNSC_SentimentExtension. 
+Copy the metadata tables into the `/data/dataverse_files` dir and rename to `speaker.tsv`and `meta.tsv`.
+
+Define threshold $float for average sentiment scores for debates with `--lexicoder_score --min $float` or `--lexicoder_score --max $float`.
+``$python create_subcorpus.py --lexicoder_score --min 0.5 ``  
+``$python create_subcorpus.py --lexicoder --max 0.5``
+Threshold is a float number. Sentiment values range between x and x.
 
 
 --------------
@@ -72,7 +86,7 @@ potential TODO on subcorpus:
 - voting behaviour:
     - extract resolution info S/RES/\d\d\d\d from meta[outcome] 
     - use UN library API, and search for voting behaviour
-- new github project: sentiment analysis with lexicoder --> add filter
+- speeches selection based on sentiment score and country
 
 
 
